@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Real-X CRM</title>
+
+  <!-- React + Babel CDN -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #06080D;
+      font-family: Arial, sans-serif;
+    }
+    #root {
+      width: 100%;
+      min-height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+import { useState, useEffect } from "react";
+
+const C = {
+  bg:"#06080D",surface:"#0C0F18",card:"#10141F",cardHover:"#161B28",
+  border:"rgba(201,164,74,0.13)",borderHover:"rgba(201,164,74,0.32)",
+  gold:"#C9A44A",goldLight:"#E8C97A",goldDim:"rgba(201,164,74,0.5)",
+  text:"#EDE8DB",sub:"#7A7570",dim:"#3A3830",
+  green:"#38B87A",red:"#E04A4A",blue:"#4A9EFF",
+  amber:"#F0A030",purple:"#9B7FFF",teal:"#2ECFBE",wa:"#25D366",
+};
+const INP={width:"100%",background:"#080B13",border:"1px solid rgba(201,164,74,0.15)",borderRadius:7,color:"#EDE8DB",fontSize:12,padding:"9px 11px",outline:"none",fontFamily:"inherit"};
+const SEL={...INP,cursor:"pointer"};
+const LBL={fontSize:10,color:"#7A7570",textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:4,display:"block"};
+const R2={display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12};
+const tsNow=()=>new Date().toISOString();
+const tsAgo=(ms)=>new Date(Date.now()-ms).toISOString();
+const fmtT=(iso)=>{if(!iso)return"";const d=new Date(iso),diff=Date.now()-d;if(diff<60000)return"Just now";if(diff<3600000)return Math.floor(diff/60000)+"m ago";if(diff<86400000)return d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});if(diff<172800000)return"Yesterday";return d.toLocaleDateString("en-IN",{day:"numeric",month:"short"});};
+
+const SP=[
+  {id:1,name:"Prestige Green Valley",loc:"Tellapur",region:"West Hyderabad",type:"Open Plots",price:"₹82L",priceSqYd:"₹35,000/sq.yd",size:"200 sq.yd",facing:"East",dev:"Prestige Group",contact:"Rajesh Kumar",phone:"9876543210",rera:"P02400001234",status:"Under Construction",landmark:"ORR Exit 7",amenities:["Gated","Clubhouse","CCTV","CC Roads"],desc:"Premium plotted development near ORR.",scores:{invest:88,growth:92,luxury:75,resale:85},added:"2 days ago",hot:true},
+  {id:2,name:"My Home Mega City",loc:"Kokapet",region:"West Hyderabad",type:"Apartment 3BHK",price:"₹95L",priceSqYd:"₹8,500/sq.ft",size:"1,250 sq.ft",facing:"NE",dev:"My Home Constructions",contact:"Priya Sharma",phone:"9988776655",rera:"P02400005678",status:"Ready to Move",landmark:"Near Financial District",amenities:["Infinity Pool","Gym","Power Backup","EV Charging"],desc:"Luxury 3BHK in Kokapet — fastest appreciating corridor.",scores:{invest:85,growth:90,luxury:88,resale:82},added:"1 week ago",hot:true},
+  {id:3,name:"Aliens Space Station",loc:"Narsingi",region:"West Hyderabad",type:"Apartment 2BHK",price:"₹78L",priceSqYd:"₹7,200/sq.ft",size:"1,100 sq.ft",facing:"East",dev:"Aliens Developers",contact:"Amit Verma",phone:"9123456789",rera:"P02400009012",status:"Pre-Launch",landmark:"5 min from ORR",amenities:["Rooftop Pool","Sky Lounge","Smart Home"],desc:"Pre-launch pricing — maximum upside.",scores:{invest:91,growth:88,luxury:82,resale:79},added:"3 days ago",hot:false},
+  {id:4,name:"Aparna Sarovar Zenith",loc:"Nallagandla",region:"West Hyderabad",type:"Apartment 4BHK",price:"₹1.25Cr",priceSqYd:"₹9,800/sq.ft",size:"1,800 sq.ft",facing:"West",dev:"Aparna Constructions",contact:"Sunitha Reddy",phone:"9876501234",rera:"P02400003456",status:"Ready to Move",landmark:"Near Hitech City",amenities:["Infinity Pool","Private Theater","Golf Lawn","Spa"],desc:"Ultra-luxury 4BHK penthouses near Hitech City.",scores:{invest:78,growth:82,luxury:97,resale:88},added:"5 days ago",hot:false},
+  {id:5,name:"Vertex Aspire Villas",loc:"Bachupally",region:"North Hyderabad",type:"Villa",price:"₹65L",priceSqYd:"₹4,500/sq.yd",size:"300 sq.yd",facing:"North",dev:"Vertex Homes",contact:"Suresh Babu",phone:"9955443322",rera:"P02400007890",status:"Under Construction",landmark:"Near Miyapur Metro",amenities:["Private Garden","Kids Park","Jogging Track"],desc:"Independent villas in fast-growing North Hyderabad.",scores:{invest:74,growth:79,luxury:70,resale:76},added:"1 week ago",hot:false},
+  {id:6,name:"SMR Vinay Harmony",loc:"Osman Nagar",region:"West Hyderabad",type:"Open Plots",price:"₹55L",priceSqYd:"₹28,000/sq.yd",size:"200 sq.yd",facing:"South",dev:"SMR Builders",contact:"Venkat Rao",phone:"9811223344",rera:"P02400002345",status:"Under Construction",landmark:"ORR Junction 1 km",amenities:["Gated","CC Roads","Underground Drainage"],desc:"High-growth ORR belt plots.",scores:{invest:90,growth:93,luxury:68,resale:87},added:"Today",hot:true},
+];
+
+const SL=[
+  {id:1,name:"Ravi Chandra",phone:"9876543210",budget:"₹80L–₹1Cr",req:"3BHK near Financial District",status:"Hot",last:"Today",src:"WhatsApp",notes:"Investment purpose",
+   activities:[{id:1,type:"contact",text:"First contact via WhatsApp.",time:tsAgo(3*86400000)},{id:2,type:"property_sent",text:"Sent Prestige Green Valley details",propName:"Prestige Green Valley",time:tsAgo(2*86400000)},{id:3,type:"req_change",text:"Budget updated ₹70L-₹90L → ₹80L-₹1Cr",time:tsAgo(86400000)},{id:4,type:"note",text:"Interested in Kokapet too. Wants site visit this weekend.",time:tsAgo(3600000)}],
+   propsSent:[{propId:1,propName:"Prestige Green Valley",sentAt:tsAgo(2*86400000)}],
+   reqHistory:[{req:"3BHK near Hitech City",budget:"₹70L–₹90L",date:"3 days ago"},{req:"3BHK near Financial District",budget:"₹80L–₹1Cr",date:"Yesterday"}]},
+  {id:2,name:"Kavitha Reddy",phone:"9988776655",budget:"₹1.5Cr+",req:"Villa, West Hyderabad",status:"Warm",last:"Yesterday",src:"Referral",notes:"Prefers gated communities",
+   activities:[{id:1,type:"contact",text:"Referred by Suresh Babu. Luxury villa requirement.",time:tsAgo(7*86400000)},{id:2,type:"property_sent",text:"Sent Aparna Sarovar Zenith brochure",propName:"Aparna Sarovar Zenith",time:tsAgo(5*86400000)},{id:3,type:"note",text:"Wants independent villa not apartment. Budget flexible to 2Cr.",time:tsAgo(86400000)}],
+   propsSent:[{propId:4,propName:"Aparna Sarovar Zenith",sentAt:tsAgo(5*86400000)}],
+   reqHistory:[{req:"Villa or penthouse West Hyderabad",budget:"₹1.5Cr+",date:"1 week ago"}]},
+  {id:3,name:"Srinivas Rao",phone:"9123456789",budget:"₹50L–₹70L",req:"Open plots near ORR",status:"Hot",last:"2 days ago",src:"WhatsApp",notes:"East/north facing only",
+   activities:[{id:1,type:"contact",text:"WhatsApp enquiry for ORR belt plots.",time:tsAgo(4*86400000)},{id:2,type:"property_sent",text:"Sent SMR Vinay Harmony details",propName:"SMR Vinay Harmony",time:tsAgo(2*86400000)},{id:3,type:"note",text:"Ready to book if price is right.",time:tsAgo(2*86400000)}],
+   propsSent:[{propId:6,propName:"SMR Vinay Harmony",sentAt:tsAgo(2*86400000)}],
+   reqHistory:[{req:"Open plots near ORR",budget:"₹50L–₹70L",date:"4 days ago"}]},
+  {id:4,name:"Deepika Shah",phone:"8765432109",budget:"₹2Cr+",req:"Luxury penthouse Kokapet",status:"Cold",last:"1 week ago",src:"Website",notes:"No response to follow-ups",
+   activities:[{id:1,type:"contact",text:"Enquiry from website. Ultra-luxury requirement.",time:tsAgo(10*86400000)},{id:2,type:"note",text:"No response to 2 follow-up calls.",time:tsAgo(7*86400000)}],
+   propsSent:[],reqHistory:[{req:"Luxury penthouse Kokapet",budget:"₹2Cr+",date:"10 days ago"}]},
+  {id:5,name:"Mahesh Kumar",phone:"9654321098",budget:"₹60L–₹80L",req:"Investment plots ORR belt",status:"Warm",last:"3 days ago",src:"WhatsApp",notes:"Call evenings only",
+   activities:[{id:1,type:"contact",text:"WhatsApp enquiry for investment plots.",time:tsAgo(6*86400000)},{id:2,type:"property_sent",text:"Sent 3 ORR belt options",propName:"Multiple",time:tsAgo(3*86400000)},{id:3,type:"note",text:"Comparing with another agent. Follow up with better pricing.",time:tsAgo(3*86400000)}],
+   propsSent:[{propId:6,propName:"SMR Vinay Harmony",sentAt:tsAgo(3*86400000)}],
+   reqHistory:[{req:"Investment plots ORR belt",budget:"₹60L–₹80L",date:"6 days ago"}]},
+];
+
+async function loadS(k,fb){try{const r=await window.storage.get(k);return r?JSON.parse(r.value):fb;}catch{return fb;}}
+async function saveS(k,d){try{await window.storage.set(k,JSON.stringify(d));}catch{}}
+
+async function callAI(prompt){
+  try{
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
+    const d=await r.json();
+    if(d.error)return"ERR:"+d.error.message;
+    return d.content?.[0]?.text||"";
+  }catch(e){return"ERR:"+e.message;}
+}
+
+function fmtWA(p){return[`🏢 *${p.name}*`,`📍 ${p.loc}, ${p.region}`,``,`💰 *Price: ${p.price}*${p.priceSqYd?`  |  ${p.priceSqYd}`:""}`,`📐 ${p.size||"—"}${p.facing?`  |  ${p.facing} Facing`:""}`,`🏗️ ${p.status}`,p.dev?`🏛️ ${p.dev}`:null,p.landmark?`📌 Near: ${p.landmark}`:null,``,p.amenities?.length?`✅ ${p.amenities.join(", ")}`:null,p.rera?`🔖 RERA: ${p.rera}`:null,(p.contact||p.phone)?`📞 ${[p.contact,p.phone].filter(Boolean).join(" · ")}`:null,``,`_Shared by Real-X Hyderabad CRM_`].filter(v=>v!==null).join("\n");}
+function fmtMultiWA(props,note=""){return`🏆 *Real-X Hyderabad*\n${note?`📋 ${note}\n`:""}\n`+props.map((p,i)=>`━━━━━━━━━━\n${i+1}. *${p.name}*\n📍 ${p.loc}  💰 ${p.price}\n🏗️ ${p.status}  📐 ${p.size||"—"}\n${(p.contact||p.phone)?`📞 ${[p.contact,p.phone].filter(Boolean).join(" · ")}`:""}`.trim()).join("\n\n")+"\n\n_Real-X Hyderabad CRM_";}
+function openWA(text,phone=""){window.open(phone?`https://wa.me/${phone.replace(/\D/g,"")}?text=${encodeURIComponent(text)}`:`https://wa.me/?text=${encodeURIComponent(text)}`,"_blank");}
+
+/* SHARE MODAL */
+function ShareModal({property,leads=[],onClose}){
+  const [phone,setPhone]=useState("");const [copied,setCopied]=useState(false);
+  const msg=fmtWA(property);
+  const copy=()=>navigator.clipboard.writeText(msg).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);});
+  const activeleads=leads.filter(l=>!["Closed - Won","Lost - Competitor","Not Interested"].includes(l.status));
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:500}} onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:16,width:500,maxHeight:"88vh",overflow:"auto"}}>
+        <div style={{padding:"14px 20px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div><div style={{fontSize:14,fontWeight:700,color:C.text}}>📤 Share on WhatsApp</div><div style={{fontSize:11,color:C.sub,marginTop:1}}>{property.name}</div></div>
+          <button onClick={onClose} style={{background:"transparent",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{padding:"15px 20px"}}>
+          <div style={{background:"#0D1A10",border:"1px solid #1A3A20",borderRadius:9,padding:"11px 13px",marginBottom:13,maxHeight:160,overflow:"auto"}}>
+            <div style={{fontSize:9,color:"#3D6040",marginBottom:5,textTransform:"uppercase",letterSpacing:"1px"}}>Message Preview</div>
+            <div style={{fontSize:11,color:"#C4DEC8",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{msg}</div>
+          </div>
+          {activeleads.length>0&&<div style={{marginBottom:12}}>
+            <div style={{fontSize:11,fontWeight:600,color:C.text,marginBottom:7}}>📱 Send to Your Leads</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:7}}>
+              {activeleads.slice(0,4).map(l=>(
+                <button key={l.id} onClick={()=>openWA(msg,l.phone)} style={{background:`${C.wa}10`,border:`1px solid ${C.wa}22`,borderRadius:8,padding:"8px 10px",cursor:"pointer",textAlign:"left"}}>
+                  <div style={{fontSize:12,fontWeight:600,color:C.text}}>{l.name}</div>
+                  <div style={{fontSize:10,color:C.sub}}>{l.phone}</div>
+                  <div style={{fontSize:10,color:C.wa,marginTop:2}}>📲 Send</div>
+                </button>
+              ))}
+            </div>
+          </div>}
+          <div style={{display:"flex",gap:7,marginBottom:10}}>
+            <input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="Enter number (91XXXXXXXXXX)" style={{...INP,flex:1}}/>
+            <button onClick={()=>openWA(msg,phone)} style={{background:C.wa,border:"none",color:"#000",borderRadius:8,padding:"9px 14px",fontSize:12,fontWeight:700,cursor:"pointer"}}>📲</button>
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>openWA(msg)} style={{flex:1,background:C.wa,border:"none",color:"#000",borderRadius:8,padding:"10px",fontSize:12,fontWeight:700,cursor:"pointer"}}>💬 Open WhatsApp</button>
+            <button onClick={copy} style={{flex:1,background:copied?`${C.green}20`:`${C.gold}12`,border:`1px solid ${copied?C.green:C.gold}28`,color:copied?C.green:C.gold,borderRadius:8,padding:"10px",fontSize:12,fontWeight:600,cursor:"pointer"}}>{copied?"✓ Copied!":"📋 Copy"}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* MULTI SHARE MODAL */
+function MultiShareModal({properties,note,leads=[],onClose}){
+  const [phone,setPhone]=useState("");const [copied,setCopied]=useState(false);
+  const msg=fmtMultiWA(properties,note);
+  const copy=()=>navigator.clipboard.writeText(msg).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);});
+  const activeleads=leads.filter(l=>!["Closed - Won","Lost - Competitor","Not Interested"].includes(l.status));
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:500}} onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:16,width:500,maxHeight:"90vh",overflow:"auto"}}>
+        <div style={{padding:"14px 20px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between"}}>
+          <div style={{fontSize:14,fontWeight:700,color:C.text}}>📤 Share {properties.length} Properties</div>
+          <button onClick={onClose} style={{background:"transparent",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{padding:"15px 20px"}}>
+          <div style={{background:"#0D1A10",border:"1px solid #1A3A20",borderRadius:9,padding:"11px 13px",marginBottom:12,maxHeight:180,overflow:"auto"}}>
+            <div style={{fontSize:11,color:"#C4DEC8",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{msg}</div>
+          </div>
+          {activeleads.length>0&&<div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:7,marginBottom:10}}>
+            {activeleads.slice(0,4).map(l=>(
+              <button key={l.id} onClick={()=>openWA(msg,l.phone)} style={{background:`${C.wa}10`,border:`1px solid ${C.wa}22`,borderRadius:8,padding:"8px 10px",cursor:"pointer",textAlign:"left"}}>
+                <div style={{fontSize:12,fontWeight:600,color:C.text}}>{l.name}</div>
+                <div style={{fontSize:10,color:C.wa}}>📲 Send</div>
+              </button>
+            ))}
+          </div>}
+          <div style={{display:"flex",gap:7,marginBottom:9}}>
+            <input value={phone} onChange={e=>setPhone(e.target.value)} placeholder="Custom number" style={{...INP,flex:1}}/>
+            <button onClick={()=>openWA(msg,phone)} style={{background:C.wa,border:"none",color:"#000",borderRadius:8,padding:"9px 14px",fontSize:12,fontWeight:700,cursor:"pointer"}}>📲</button>
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>openWA(msg)} style={{flex:1,background:C.wa,border:"none",color:"#000",borderRadius:8,padding:"10px",fontSize:12,fontWeight:700,cursor:"pointer"}}>💬 Open WhatsApp</button>
+            <button onClick={copy} style={{flex:1,background:copied?`${C.green}20`:`${C.gold}12`,border:`1px solid ${copied?C.green:C.gold}28`,color:copied?C.green:C.gold,borderRadius:8,padding:"10px",fontSize:12,fontWeight:600,cursor:"pointer"}}>{copied?"✓ Copied!":"📋 Copy"}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* PILL / BADGE */
+function Pill({label,color=C.gold}){return <span style={{fontSize:10,fontWeight:600,padding:"2px 9px",borderRadius:20,background:`${color}18`,border:`1px solid ${color}35`,color,letterSpacing:"0.4px",textTransform:"uppercase"}}>{label}</span>;}
+function StBadge({status}){const m={"Hot":C.red,"Warm":C.amber,"Cold":C.blue,"Ready to Move":C.green,"Under Construction":C.amber,"Pre-Launch":C.purple,"Resale":C.blue,"Closed - Won":C.green,"Lost - Competitor":C.sub,"Not Interested":C.dim};return <Pill label={status} color={m[status]||C.sub}/>;}
+function ScoreBar({label,val,color}){return(<div style={{marginBottom:6}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:11,color:C.sub}}>{label}</span><span style={{fontSize:11,fontWeight:600,color}}>{val}%</span></div><div style={{height:3,background:C.dim,borderRadius:2}}><div style={{width:`${val}%`,height:"100%",background:color,borderRadius:2}}/></div></div>);}
+function FF({label,children}){return <div style={{marginBottom:12}}><label style={LBL}>{label}</label>{children}</div>;}
+
+const REGIONS=["West Hyderabad","South Hyderabad","North Hyderabad","East Hyderabad","ORR Belt","Cyberabad","Secunderabad"];
+const PTYPES=["Open Plots","Apartment 1BHK","Apartment 2BHK","Apartment 3BHK","Apartment 4BHK","Villa","Commercial","Farmland","Row House","Penthouse"];
+const PSTAT=["Pre-Launch","New Launch","Under Construction","Ready to Move","Resale"];
+const FACES=["East","West","North","South","North-East","North-West","South-East","South-West"];
+const LSTAT_COL={"Hot":C.red,"Warm":C.amber,"Cold":C.blue,"Closed - Won":C.green,"Lost - Competitor":C.sub,"Not Interested":C.dim};
+
+/* ADD PROPERTY MODAL */
+function AddPropModal({initial={},onSave,onClose}){
+  const def={name:"",loc:"",region:"West Hyderabad",type:"Apartment 2BHK",price:"",priceSqYd:"",size:"",facing:"East",dev:"",contact:"",phone:"",rera:"",status:"Under Construction",landmark:"",amenities:"",desc:""};
+  const [f,setF]=useState({...def,...initial});
+  const set=k=>e=>setF(p=>({...p,[k]:e.target.value}));
+  const ok=f.name.trim()&&f.loc.trim();
+  const save=()=>{if(!ok)return;onSave({...f,amenities:f.amenities?f.amenities.split(",").map(a=>a.trim()).filter(Boolean):[],scores:{invest:75,growth:78,luxury:70,resale:72}});onClose();};
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300}} onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:16,width:580,maxHeight:"90vh",overflow:"auto",display:"flex",flexDirection:"column"}}>
+        <div style={{padding:"15px 22px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,background:C.surface,zIndex:1}}>
+          <div style={{fontSize:15,fontWeight:700,color:C.text,fontFamily:"'Cormorant Garamond',serif"}}>Add New Property</div>
+          <button onClick={onClose} style={{background:"transparent",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>✕</button>
+        </div>
+        <div style={{padding:"16px 22px"}}>
+          <FF label="Project Name *"><input style={INP} value={f.name} onChange={set("name")} placeholder="e.g. Prestige Green Valley"/></FF>
+          <div style={R2}><FF label="Location *"><input style={INP} value={f.loc} onChange={set("loc")} placeholder="e.g. Tellapur"/></FF><FF label="Region"><select style={SEL} value={f.region} onChange={set("region")}>{REGIONS.map(r=><option key={r}>{r}</option>)}</select></FF></div>
+          <div style={R2}><FF label="Property Type"><select style={SEL} value={f.type} onChange={set("type")}>{PTYPES.map(t=><option key={t}>{t}</option>)}</select></FF><FF label="Status"><select style={SEL} value={f.status} onChange={set("status")}>{PSTAT.map(s=><option key={s}>{s}</option>)}</select></FF></div>
+          <div style={R2}><FF label="Price"><input style={INP} value={f.price} onChange={set("price")} placeholder="₹82L"/></FF><FF label="Price per sq.yd/ft"><input style={INP} value={f.priceSqYd} onChange={set("priceSqYd")} placeholder="₹35,000/sq.yd"/></FF></div>
+          <div style={R2}><FF label="Size"><input style={INP} value={f.size} onChange={set("size")} placeholder="200 sq.yd"/></FF><FF label="Facing"><select style={SEL} value={f.facing} onChange={set("facing")}>{FACES.map(fc=><option key={fc}>{fc}</option>)}</select></FF></div>
+          <div style={R2}><FF label="Developer"><input style={INP} value={f.dev} onChange={set("dev")} placeholder="Prestige Group"/></FF><FF label="Contact Person"><input style={INP} value={f.contact} onChange={set("contact")} placeholder="Name"/></FF></div>
+          <div style={R2}><FF label="Phone"><input style={INP} value={f.phone} onChange={set("phone")} placeholder="9876543210"/></FF><FF label="RERA"><input style={INP} value={f.rera} onChange={set("rera")} placeholder="P02400001234"/></FF></div>
+          <FF label="Landmark"><input style={INP} value={f.landmark} onChange={set("landmark")} placeholder="Near ORR Exit 7"/></FF>
+          <FF label="Amenities (comma separated)"><input style={INP} value={f.amenities} onChange={set("amenities")} placeholder="Gated, Clubhouse, Pool, CCTV"/></FF>
+          <FF label="Description"><textarea style={{...INP,height:65,resize:"none",lineHeight:1.5}} value={f.desc} onChange={set("desc")} placeholder="Investment rationale, connectivity..."/></FF>
+        </div>
+        <div style={{padding:"12px 22px",borderTop:`1px solid ${C.border}`,display:"flex",gap:9,position:"sticky",bottom:0,background:C.surface}}>
+          <button onClick={save} style={{flex:1,background:ok?C.gold:`${C.gold}25`,color:ok?"#050810":C.dim,border:"none",borderRadius:8,padding:"11px",fontSize:13,fontWeight:700,cursor:ok?"pointer":"default"}}>✓ Save Property</button>
+          <button onClick={onClose} style={{background:"transparent",border:`1px solid ${C.border}`,color:C.sub,borderRadius:8,padding:"11px 16px",fontSize:12,cursor:"pointer"}}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ADD LEAD MODAL */
+function AddLeadModal({onSave,onClose}){
+  const [f,setF]=useState({name:"",phone:"",budget:"",req:"",status:"Hot",src:"WhatsApp",notes:""});
+  const set=k=>e=>setF(p=>({...p,[k]:e.target.value}));
+  const ok=f.name.trim()&&f.phone.trim();
+  const save=()=>{if(!ok)return;onSave(f);onClose();};
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300}} onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:16,width:460,overflow:"hidden"}}>
+        <div style={{padding:"15px 22px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between"}}><div style={{fontSize:15,fontWeight:700,color:C.text,fontFamily:"'Cormorant Garamond',serif"}}>Add New Lead</div><button onClick={onClose} style={{background:"transparent",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>✕</button></div>
+        <div style={{padding:"16px 22px"}}>
+          <div style={R2}><FF label="Name *"><input style={INP} value={f.name} onChange={set("name")} placeholder="Customer name"/></FF><FF label="Phone *"><input style={INP} value={f.phone} onChange={set("phone")} placeholder="9876543210"/></FF></div>
+          <FF label="Budget Range"><input style={INP} value={f.budget} onChange={set("budget")} placeholder="₹80L – ₹1Cr"/></FF>
+          <FF label="Requirement"><textarea style={{...INP,height:55,resize:"none"}} value={f.req} onChange={set("req")} placeholder="3BHK near Financial District"/></FF>
+          <div style={R2}><FF label="Status"><select style={SEL} value={f.status} onChange={set("status")}>{["Hot","Warm","Cold"].map(s=><option key={s}>{s}</option>)}</select></FF><FF label="Source"><select style={SEL} value={f.src} onChange={set("src")}>{["WhatsApp","Referral","Website","Walk-in","Phone","Social Media"].map(s=><option key={s}>{s}</option>)}</select></FF></div>
+          <FF label="Notes"><input style={INP} value={f.notes} onChange={set("notes")} placeholder="Preferences, call timing..."/></FF>
+        </div>
+        <div style={{padding:"12px 22px",borderTop:`1px solid ${C.border}`,display:"flex",gap:9}}>
+          <button onClick={save} style={{flex:1,background:ok?C.green:`${C.green}25`,color:ok?"#050810":C.dim,border:"none",borderRadius:8,padding:"11px",fontSize:13,fontWeight:700,cursor:ok?"pointer":"default"}}>✓ Save Lead</button>
+          <button onClick={onClose} style={{background:"transparent",border:`1px solid ${C.border}`,color:C.sub,borderRadius:8,padding:"11px 16px",fontSize:12,cursor:"pointer"}}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* PROP CARD */
+function PropCard({p,onClick,leads}){
+  const [hov,setHov]=useState(false);const [share,setShare]=useState(false);
+  return(<>
+    <div onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} style={{background:hov?C.cardHover:C.card,border:`1px solid ${hov?C.borderHover:C.border}`,borderRadius:12,padding:"14px 15px",transition:"all 0.15s",position:"relative",display:"flex",flexDirection:"column"}}>
+      {p.hot&&<div style={{position:"absolute",top:10,right:10}}><Pill label="🔥 Hot" color={C.red}/></div>}
+      <div onClick={()=>onClick(p)} style={{flex:1,cursor:"pointer"}}>
+        <div style={{fontSize:13,fontWeight:600,color:C.text,marginBottom:2,paddingRight:p.hot?60:0,lineHeight:1.3}}>{p.name}</div>
+        <div style={{fontSize:11,color:C.sub,marginBottom:8}}>📍 {p.loc} · {p.region}</div>
+        <div style={{display:"flex",gap:5,marginBottom:9,flexWrap:"wrap"}}><StBadge status={p.status}/><Pill label={p.type} color={C.blue}/></div>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:9}}><div><div style={{fontSize:18,fontWeight:700,color:C.gold}}>{p.price}</div><div style={{fontSize:10,color:C.sub}}>{p.priceSqYd}</div></div><div style={{textAlign:"right"}}><div style={{fontSize:10,color:C.sub}}>Size</div><div style={{fontSize:12,fontWeight:500,color:C.text}}>{p.size}</div></div></div>
+        <div style={{borderTop:`1px solid ${C.border}`,paddingTop:8}}><ScoreBar label="Investment" val={p.scores?.invest||75} color={C.green}/><ScoreBar label="Growth" val={p.scores?.growth||78} color={C.blue}/></div>
+        <div style={{marginTop:6,fontSize:10,color:C.dim}}>{p.dev||"—"} · {p.added||"recently"}</div>
+      </div>
+      <button onClick={e=>{e.stopPropagation();setShare(true);}} style={{marginTop:9,width:"100%",background:`${C.wa}15`,border:`1px solid ${C.wa}28`,color:C.wa,borderRadius:7,padding:"7px",fontSize:11,cursor:"pointer",fontWeight:600}}>📤 Share on WhatsApp</button>
+    </div>
+    {share&&<ShareModal property={p} leads={leads||[]} onClose={()=>setShare(false)}/>}
+  </>);
+}
+
+/* PROP DETAIL MODAL */
+function PropModal({p,leads,onClose}){
+  const [share,setShare]=useState(false);
+  return(<>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.88)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200}} onClick={onClose}>
+      <div onClick={e=>e.stopPropagation()} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:16,padding:22,width:530,maxHeight:"84vh",overflow:"auto"}}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:13}}><div><div style={{fontSize:17,fontWeight:700,color:C.text,fontFamily:"'Cormorant Garamond',serif"}}>{p.name}</div><div style={{fontSize:11,color:C.sub,marginTop:2}}>📍 {p.loc} · {p.region}</div></div><button onClick={onClose} style={{background:"transparent",border:"none",color:C.sub,fontSize:18,cursor:"pointer"}}>✕</button></div>
+        {p.desc&&<div style={{fontSize:12,color:C.sub,lineHeight:1.6,marginBottom:13,paddingBottom:11,borderBottom:`1px solid ${C.border}`}}>{p.desc}</div>}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginBottom:13}}>{[["Price",p.price],["Per Sq.Yd/Ft",p.priceSqYd],["Size",p.size],["Facing",p.facing],["Developer",p.dev],["Status",p.status],["Landmark",p.landmark],["RERA",p.rera]].filter(([,v])=>v).map(([k,v])=><div key={k} style={{background:C.bg,borderRadius:7,padding:"7px 10px"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:2}}>{k}</div><div style={{fontSize:12,color:C.text,fontWeight:500}}>{v}</div></div>)}</div>
+        {p.scores&&<div style={{marginBottom:12}}><div style={{fontSize:10,color:C.gold,textTransform:"uppercase",letterSpacing:"1px",marginBottom:7}}>AI Scores</div><ScoreBar label="Investment" val={p.scores.invest||75} color={C.green}/><ScoreBar label="Growth" val={p.scores.growth||78} color={C.blue}/><ScoreBar label="Luxury" val={p.scores.luxury||70} color={C.purple}/><ScoreBar label="Resale" val={p.scores.resale||72} color={C.gold}/></div>}
+        {p.amenities?.length>0&&<div style={{marginBottom:12}}><div style={{fontSize:10,color:C.sub,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:5}}>Amenities</div><div style={{display:"flex",flexWrap:"wrap",gap:5}}>{p.amenities.map(a=><Pill key={a} label={a} color={C.teal}/>)}</div></div>}
+        {(p.contact||p.phone)&&<div style={{background:`${C.gold}07`,border:`1px solid ${C.gold}18`,borderRadius:8,padding:"8px 11px",marginBottom:12}}><div style={{fontSize:9,color:C.gold,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:2}}>Contact</div><div style={{fontSize:12,color:C.goldLight,fontWeight:500}}>{p.contact}{p.phone?` · ${p.phone}`:""}</div></div>}
+        <button onClick={()=>setShare(true)} style={{width:"100%",background:C.wa,border:"none",color:"#000",borderRadius:9,padding:"11px",fontSize:13,fontWeight:700,cursor:"pointer"}}>📤 Share This Property on WhatsApp</button>
+      </div>
+    </div>
+    {share&&<ShareModal property={p} leads={leads||[]} onClose={()=>setShare(false)}/>}
+  </>);
+}
+
+/* SIDEBAR */
+function Sidebar({tab,setTab,pc,lc}){
+  const nav=[{id:"dashboard",icon:"▣",label:"Dashboard"},{id:"properties",icon:"⊞",label:"Properties",count:pc},{id:"search",icon:"◈",label:"AI Search"},{id:"whatsapp",icon:"◎",label:"WhatsApp Bot"},{id:"leads",icon:"◉",label:"Leads & CRM",count:lc}];
+  return(
+    <div style={{width:210,background:C.surface,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
+      <div style={{padding:"20px 17px 14px",borderBottom:`1px solid ${C.border}`}}><div style={{fontSize:9,color:C.goldDim,letterSpacing:"4px",textTransform:"uppercase",marginBottom:3}}>Real-X</div><div style={{fontSize:19,fontWeight:700,color:C.gold,fontFamily:"'Cormorant Garamond',serif"}}>Hyderabad</div><div style={{fontSize:10,color:C.sub,marginTop:2}}>Property Intelligence CRM</div></div>
+      <nav style={{padding:"10px 9px",flex:1}}>{nav.map(n=><div key={n.id} onClick={()=>setTab(n.id)} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 11px",borderRadius:8,cursor:"pointer",marginBottom:2,background:tab===n.id?`${C.gold}12`:"transparent",border:`1px solid ${tab===n.id?`${C.gold}28`:"transparent"}`,color:tab===n.id?C.gold:C.sub,fontSize:12,fontWeight:tab===n.id?600:400,transition:"all 0.12s"}}><span style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:13}}>{n.icon}</span>{n.label}</span>{n.count!=null&&<span style={{fontSize:10,background:`${C.gold}18`,color:C.gold,borderRadius:10,padding:"1px 7px",fontWeight:700}}>{n.count}</span>}</div>)}</nav>
+      <div style={{padding:"11px 17px",borderTop:`1px solid ${C.border}`}}><div style={{fontSize:9,color:C.dim,marginBottom:6,letterSpacing:"1px",textTransform:"uppercase"}}>Live Stats</div>{[["Properties",pc],["Leads",lc]].map(([l,v])=><div key={l} style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:11,color:C.dim}}>{l}</span><span style={{fontSize:11,fontWeight:600,color:C.text}}>{v}</span></div>)}</div>
+    </div>
+  );
+}
+
+/* DASHBOARD */
+function Dashboard({properties,leads}){
+  const hot=leads.filter(l=>l.status==="Hot").length;
+  const warm=leads.filter(l=>l.status==="Warm").length;
+  const active=leads.filter(l=>!["Closed - Won","Lost - Competitor","Not Interested"].includes(l.status)).length;
+  const lm=properties.reduce((a,p)=>{a[p.loc]=(a[p.loc]||0)+1;return a;},{});
+  const locs=Object.entries(lm).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const mx=locs[0]?.[1]||1;
+  return(
+    <div>
+      <div style={{marginBottom:20}}><div style={{fontSize:21,fontWeight:700,color:C.text,fontFamily:"'Cormorant Garamond',serif"}}>Good morning, Real-X Team 👋</div><div style={{fontSize:12,color:C.sub,marginTop:3}}>{new Date().toLocaleDateString("en-IN",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}</div></div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:11,marginBottom:18}}>
+        {[["Total Properties",properties.length,"Live inventory",C.blue],["Active Leads",active,"In pipeline",C.green],["Hot Leads",hot,"Need attention",C.red],["Warm Leads",warm,"Follow up",C.amber]].map(([l,v,ch,col])=>(
+          <div key={l} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"14px 16px"}}><div style={{fontSize:10,color:C.sub,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:8}}>{l}</div><div style={{fontSize:25,fontWeight:700,color:col,marginBottom:3}}>{v}</div><div style={{fontSize:11,color:C.sub}}>{ch}</div></div>
+        ))}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:13,marginBottom:13}}>
+        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"14px 16px"}}>
+          <div style={{fontSize:12,fontWeight:600,color:C.text,marginBottom:12}}>🔥 Inventory by Location</div>
+          {locs.length===0?<div style={{fontSize:12,color:C.sub,textAlign:"center",padding:"20px 0"}}>Add properties to see breakdown</div>:locs.map(([name,count],i)=>(
+            <div key={name} style={{marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:12,color:C.text}}>{name}</span><span style={{fontSize:11,color:i===0?C.red:i<3?C.green:C.sub}}>{count} listing{count>1?"s":""}</span></div><div style={{height:3,background:C.dim,borderRadius:2}}><div style={{width:`${(count/mx)*100}%`,height:"100%",background:i===0?C.red:i<3?C.green:C.sub,borderRadius:2}}/></div></div>
+          ))}
+        </div>
+        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"14px 16px"}}>
+          <div style={{fontSize:12,fontWeight:600,color:C.text,marginBottom:12}}>👥 Lead Pipeline</div>
+          {[["🔥 Hot",C.red],["⚡ Warm",C.amber],["❄️ Cold",C.blue],["✅ Closed - Won",C.green],["❌ Lost",C.sub]].map(([s,col])=>{const cnt=leads.filter(l=>l.status===s.replace("🔥 ","").replace("⚡ ","").replace("❄️ ","").replace("✅ ","").replace("❌ ","Lost - Competitor")).length||leads.filter(l=>s.includes(l.status)).length;return cnt>0&&(
+            <div key={s} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}><span style={{fontSize:12,color:C.text}}>{s}</span><div style={{display:"flex",alignItems:"center",gap:8}}><div style={{height:3,width:70,background:C.dim,borderRadius:2}}><div style={{width:`${(cnt/leads.length)*100}%`,height:"100%",background:col,borderRadius:2}}/></div><span style={{fontSize:11,fontWeight:600,color:col,minWidth:16}}>{cnt}</span></div></div>
+          );})}
+        </div>
+      </div>
+      <div style={{background:`${C.gold}06`,border:`1px solid ${C.gold}18`,borderRadius:12,padding:"13px 16px",display:"flex",gap:10}}><div style={{fontSize:22,flexShrink:0}}>🧠</div><div><div style={{fontSize:12,fontWeight:600,color:C.gold,marginBottom:3}}>AI Market Intelligence</div><div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>ORR belt showing 18% YoY appreciation. Tellapur & Kokapet undervalued vs Financial District. {hot} hot leads need immediate follow-up — match them using AI Search.</div></div></div>
+    </div>
+  );
+}
+
+/* PROPERTIES */
+function Properties({properties,leads,addProp}){
+  const [srch,setSrch]=useState("");const [filt,setFilt]=useState("All");const [sel,setSel]=useState(null);const [showAdd,setShowAdd]=useState(false);const [shareAll,setShareAll]=useState(false);
+  const types=["All","Open Plots","Apartment","Villa","Commercial","Farmland"];
+  const filtered=properties.filter(p=>{const q=srch.toLowerCase();const ms=!q||[p.name,p.loc,p.region,p.type,p.dev,p.landmark,p.status,p.rera,p.contact].some(v=>(v||"").toLowerCase().includes(q));const mf=filt==="All"||(p.type||"").startsWith(filt)||p.type===filt;return ms&&mf;});
+  return(
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <div><div style={{fontSize:20,fontWeight:700,color:C.text,fontFamily:"'Cormorant Garamond',serif"}}>Property Inventory</div><div style={{fontSize:12,color:C.sub,marginTop:2}}>Showing {filtered.length} of {properties.length}{srch?` for "${srch}`:""}</div></div>
+        <div style={{display:"flex",gap:8}}>{filtered.length>0&&<button onClick={()=>setShareAll(true)} style={{background:`${C.wa}12`,border:`1px solid ${C.wa}28`,color:C.wa,borderRadius:8,padding:"7px 13px",fontSize:11,cursor:"pointer",fontWeight:600}}>📤 Share All ({filtered.length})</button>}<button onClick={()=>setShowAdd(true)} style={{background:`${C.gold}12`,border:`1px solid ${C.gold}30`,color:C.gold,borderRadius:8,padding:"7px 14px",fontSize:12,cursor:"pointer",fontWeight:600}}>+ Add Property</button></div>
+      </div>
+      <div style={{position:"relative",marginBottom:10}}><span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",fontSize:13,color:C.sub,pointerEvents:"none"}}>🔍</span><input value={srch} onChange={e=>setSrch(e.target.value)} placeholder="Search by name, location, developer, type, RERA..." style={{...INP,paddingLeft:32,fontSize:13,borderRadius:9}}/>{srch&&<button onClick={()=>setSrch("")} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",color:C.sub,cursor:"pointer",fontSize:14}}>✕</button>}</div>
+      <div style={{display:"flex",gap:6,marginBottom:14,flexWrap:"wrap"}}>{types.map(t=><button key={t} onClick={()=>setFilt(t)} style={{padding:"5px 11px",borderRadius:20,fontSize:11,cursor:"pointer",background:filt===t?C.gold:"transparent",border:`1px solid ${filt===t?C.gold:C.border}`,color:filt===t?"#050810":C.sub,fontWeight:filt===t?700:400}}>{t}</button>)}</div>
+      {filtered.length===0?<div style={{textAlign:"center",padding:"60px 20px"}}><div style={{fontSize:28,marginBottom:10}}>{srch?"🔍":"🏢"}</div><div style={{fontSize:14,color:C.sub,marginBottom:8}}>{srch?`No results for "${srch}"`:"No properties yet"}</div>{!srch&&<button onClick={()=>setShowAdd(true)} style={{background:C.gold,color:"#050810",border:"none",borderRadius:8,padding:"10px 20px",fontSize:12,fontWeight:700,cursor:"pointer"}}>+ Add First Property</button>}</div>:<div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:11}}>{filtered.map(p=><PropCard key={p.id} p={p} onClick={setSel} leads={leads}/>)}</div>}
+      {sel&&<PropModal p={sel} leads={leads} onClose={()=>setSel(null)}/>}
+      {showAdd&&<AddPropModal onSave={p=>addProp(p)} onClose={()=>setShowAdd(false)}/>}
+      {shareAll&&<MultiShareModal properties={filtered} note={srch||""} leads={leads} onClose={()=>setShareAll(false)}/>}
+    </div>
+  );
+}
+
+/* ── AI SEARCH — CARD BASED ── */
+function SrchCard({p,matchLabel,matchColor,leads}){
+  const [share,setShare]=useState(false);
+  return(<>
+    <div style={{background:C.card,border:`1px solid ${matchColor}35`,borderRadius:10,padding:"12px 13px",display:"flex",flexDirection:"column"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+        <div style={{flex:1,paddingRight:6}}><div style={{fontSize:12,fontWeight:600,color:C.text,lineHeight:1.3,marginBottom:2}}>{p.name}</div><div style={{fontSize:11,color:C.sub}}>📍 {p.loc} · {p.region}</div></div>
+        <Pill label={matchLabel} color={matchColor}/>
+      </div>
+      <div style={{display:"flex",gap:5,marginBottom:7,flexWrap:"wrap"}}><StBadge status={p.status}/><Pill label={p.type} color={C.blue}/></div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><div><div style={{fontSize:17,fontWeight:700,color:C.gold}}>{p.price}</div><div style={{fontSize:10,color:C.sub}}>{p.priceSqYd}</div></div><div style={{textAlign:"right"}}><div style={{fontSize:10,color:C.sub}}>Size</div><div style={{fontSize:11,color:C.text}}>{p.size}</div></div></div>
+      {p.landmark&&<div style={{fontSize:11,color:C.sub,marginBottom:7}}>📌 {p.landmark}</div>}
+      {p.dev&&<div style={{fontSize:10,color:C.dim,marginBottom:8}}>🏛️ {p.dev}</div>}
+      <button onClick={()=>setShare(true)} style={{width:"100%",background:`${C.wa}15`,border:`1px solid ${C.wa}28`,color:C.wa,borderRadius:7,padding:"7px",fontSize:11,cursor:"pointer",fontWeight:600,marginTop:"auto"}}>📤 Share with Client</button>
+    </div>
+    {share&&<ShareModal property={p} leads={leads||[]} onClose={()=>setShare(false)}/>}
+  </>);
+}
+
+function SrchSection({title,color,props,leads,note}){
+  const [shareAll,setShareAll]=useState(false);
+  return(
+    <div style={{marginBottom:20}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}><div style={{width:8,height:8,borderRadius:"50%",background:color,flexShrink:0}}/><div style={{fontSize:13,fontWeight:600,color:C.text}}>{title}</div><Pill label={props.length+" listed"} color={color}/></div>
+        {props.length>1&&<button onClick={()=>setShareAll(true)} style={{background:`${C.wa}10`,border:`1px solid ${C.wa}22`,color:C.wa,borderRadius:7,padding:"4px 10px",fontSize:10,cursor:"pointer",fontWeight:600}}>📤 Share All</button>}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:9}}>{props.map(p=><SrchCard key={p.id} p={p} matchLabel={title.split(" ")[0]} matchColor={color} leads={leads}/>)}</div>
+      {shareAll&&<MultiShareModal properties={props} note={note||title} leads={leads} onClose={()=>setShareAll(false)}/>}
+    </div>
+  );
+}
+
+function AISearch({properties,leads}){
+  const [q,setQ]=useState("");const [loading,setLoading]=useState(false);const [res,setRes]=useState(null);const [err,setErr]=useState("");
+  const exs=["3BHK in Kondapur under 1 crore","Open plots near ORR under ₹60 lakhs","Investment villa in West Hyderabad","Pre-launch flat in Narsingi or Kokapet","2BHK near Hitech City under 80 lakhs"];
+  const mLoc=(p,loc)=>{if(!loc)return false;const l=loc.toLowerCase();return(p.loc||"").toLowerCase().includes(l)||(p.region||"").toLowerCase().includes(l)||(p.landmark||"").toLowerCase().includes(l);};
+  const mType=(p,type)=>{if(!type)return true;const t=type.toLowerCase(),pt=(p.type||"").toLowerCase();if(t.includes("plot"))return pt.includes("plot");if(t.includes("villa"))return pt.includes("villa");if(t.includes("1bhk"))return pt.includes("1bhk");if(t.includes("2bhk"))return pt.includes("2bhk");if(t.includes("3bhk"))return pt.includes("3bhk");if(t.includes("4bhk"))return pt.includes("4bhk");if(t.includes("apartment")||t.includes("flat"))return pt.includes("apartment");if(t.includes("commercial"))return pt.includes("commercial");if(t.includes("farmland"))return pt.includes("farmland");return true;};
+  const search=async()=>{
+    if(!q.trim())return;
+    if(properties.length===0){setErr("⚠️ No properties in database yet. Add properties first.");return;}
+    setLoading(true);setRes(null);setErr("");
+    const raw=await callAI(`Parse this Hyderabad real estate requirement. Return ONLY valid JSON (no markdown):\n\n"${q}"\n\n{"location":"area name or null","propertyType":"Open Plots / Apartment 1BHK / Apartment 2BHK / Apartment 3BHK / Apartment 4BHK / Villa / Commercial / Farmland / null","budgetMax":"e.g. 90L or 1.2Cr or null","nearbyAreas":["5 real nearby Hyderabad areas if this location has no results"],"summary":"one line of what customer wants"}`);
+    if(raw.startsWith("ERR:")){setErr("⚠️ AI error: "+raw.slice(4));setLoading(false);return;}
+    let req={};
+    try{const m=raw.replace(/```json|```/g,"").trim().match(/\{[\s\S]*\}/);if(m)req=JSON.parse(m[0]);}catch{}
+    const loc=(req.location||"").toLowerCase().trim();
+    const type=(req.propertyType||"").toLowerCase().trim();
+    const nearby=req.nearbyAreas||[];
+    const exact=properties.filter(p=>mLoc(p,loc)&&mType(p,type));
+    const sameArea=properties.filter(p=>mLoc(p,loc)&&!mType(p,type)&&!exact.find(e=>e.id===p.id));
+    const sameType=properties.filter(p=>!mLoc(p,loc)&&mType(p,type)&&!exact.find(e=>e.id===p.id));
+    const nearbyProps=properties.filter(p=>{const inN=nearby.some(n=>(p.loc+p.region+(p.landmark||"")).toLowerCase().includes(n.toLowerCase()));return inN&&!exact.find(e=>e.id===p.id)&&!sameArea.find(e=>e.id===p.id)&&!sameType.find(e=>e.id===p.id);});
+    setRes({req,loc:req.location||"",type:req.propertyType||"",summary:req.summary||q,exact,sameArea,sameType:sameType.slice(0,6),nearby:nearbyProps.slice(0,6),nearbyAreas:nearby});
+    setLoading(false);
+  };
+  return(
+    <div>
+      <div style={{marginBottom:18}}><div style={{fontSize:20,fontWeight:700,color:C.text,fontFamily:"'Cormorant Garamond',serif"}}>AI Property Search</div><div style={{fontSize:12,color:C.sub,marginTop:3}}>Results shown as shareable property cards — no paragraphs</div></div>
+      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"14px 17px",marginBottom:12}}>
+        <div style={{fontSize:10,color:C.gold,textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:7}}>Customer Requirement</div>
+        <textarea value={q} onChange={e=>setQ(e.target.value)} placeholder='Type what your customer wants... e.g. "3BHK in Kondapur under 90 lakhs" or "investment plots near ORR"' style={{...INP,height:65,resize:"none",lineHeight:1.5}} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();search();}}}/>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:9}}>
+          <span style={{fontSize:11,color:C.sub}}>Quick examples:</span>
+          <button onClick={search} disabled={loading} style={{background:loading?`${C.gold}35`:C.gold,color:"#050810",border:"none",borderRadius:8,padding:"9px 22px",fontSize:12,fontWeight:700,cursor:loading?"default":"pointer"}}>{loading?"🔍 Searching...":"🤖 Search with AI"}</button>
+        </div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:6,marginTop:8}}>{exs.map(ex=><button key={ex} onClick={()=>setQ(ex)} style={{background:"transparent",border:`1px solid ${C.border}`,color:C.sub,borderRadius:20,padding:"4px 10px",fontSize:11,cursor:"pointer"}}>{ex}</button>)}</div>
+      </div>
+      {err&&<div style={{background:`${C.red}10`,border:`1px solid ${C.red}22`,borderRadius:9,padding:"11px 14px",marginBottom:12,fontSize:12,color:C.red}}>{err}</div>}
+      {loading&&<div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,padding:"28px 20px",textAlign:"center"}}><div style={{fontSize:26,marginBottom:8}}>🧠</div><div style={{fontSize:13,color:C.gold,fontWeight:600,marginBottom:3}}>Searching {properties.length} properties...</div><div style={{fontSize:12,color:C.sub}}>Finding matches · Checking nearby areas · Preparing cards</div></div>}
+      {res&&!loading&&(
+        <div>
+          {res.exact.length>0
+            ?<div style={{background:`${C.green}10`,border:`1px solid ${C.green}25`,borderRadius:10,padding:"11px 14px",marginBottom:18,display:"flex",alignItems:"center",gap:9}}><span style={{fontSize:18}}>✅</span><div><div style={{fontSize:13,fontWeight:600,color:C.green}}>Found {res.exact.length} matching {res.type||"properties"}{res.loc?` in ${res.loc}`:""}</div><div style={{fontSize:11,color:C.sub,marginTop:1}}>{res.summary}</div></div></div>
+            :<div style={{background:`${C.amber}08`,border:`1px solid ${C.amber}25`,borderRadius:10,padding:"13px 15px",marginBottom:18}}>
+              <div style={{fontSize:13,fontWeight:600,color:C.amber,marginBottom:4}}>😔 Sorry sir, we currently don't have {res.type||"properties"}{res.loc?` in ${res.loc}`:""} in our inventory.</div>
+              {(res.sameArea.length>0||res.sameType.length>0||res.nearby.length>0)?<div style={{fontSize:12,color:C.sub}}>But here are the best alternatives we can offer right now 👇</div>:<div style={{fontSize:12,color:C.sub}}>No matching inventory right now. Check back after adding more properties.</div>}
+              {res.nearbyAreas?.length>0&&<div style={{fontSize:11,color:C.sub,marginTop:5}}>📍 Nearby areas to explore: {res.nearbyAreas.slice(0,4).join(", ")}</div>}
+            </div>
+          }
+          {res.exact.length>0&&<SrchSection title="✅ Best Matches" color={C.green} props={res.exact} leads={leads} note={res.summary}/>}
+          {res.sameArea.length>0&&<SrchSection title={`📍 Also in ${res.loc||"this area"} (different type)`} color={C.amber} props={res.sameArea} leads={leads} note={`Properties in ${res.loc}`}/>}
+          {res.sameType.length>0&&<SrchSection title={`🏢 ${res.type||"Similar"} in other areas`} color={C.blue} props={res.sameType} leads={leads} note={`${res.type} options`}/>}
+          {res.nearby.length>0&&<SrchSection title="🗺️ Nearby Area Options" color={C.purple} props={res.nearby} leads={leads} note="Nearby alternatives"/>}
+          {res.exact.length===0&&res.sameArea.length===0&&res.sameType.length===0&&res.nearby.length===0&&(
+            <div style={{textAlign:"center",padding:"36px 20px",background:C.card,border:`1px solid ${C.border}`,borderRadius:12}}>
+              <div style={{fontSize:30,marginBottom:10}}>🏗️</div>
+              <div style={{fontSize:13,color:C.text,fontWeight:600,marginBottom:6}}>No inventory found for this requirement</div>
+              <div style={{fontSize:12,color:C.sub,lineHeight:1.7,marginBottom:12}}>Add properties from the WhatsApp Bot or Properties tab and they will show up here.</div>
+              <div style={{fontSize:11,color:C.gold}}>Try sourcing from: {(res.nearbyAreas||[]).join(", ")||"Kokapet, Tellapur, Narsingi, Financial District"}</div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* WHATSAPP BOT */
+function WhatsAppBot({addProp}){
+  const [msg,setMsg]=useState("");const [loading,setLoading]=useState(false);const [ext,setExt]=useState(null);const [showSave,setShowSave]=useState(false);const [saved,setSaved]=useState(false);
+  const [chat,setChat]=useState([{from:"dev",text:"Hi, 2BHK flats in Tellapur starting 82L near ORR. 1200 sqft, east facing. RERA approved. 9876543210",time:"10:28 AM"},{from:"bot",text:"✅ Extracted! Tellapur · 2BHK · ₹82L · 1,200 sq.ft\nClick 'Save to Database' to confirm.",time:"10:28 AM",ok:true}]);
+  const samples=["Kokapet 3BHK luxury apartments 1500sqft 1.1Cr pool gym ready to move near financial district RERA P02400012345 Ravi 9876500000","Villa plots Narsingi 200sqyards 45L ORR frontage gated DTCP approved Suresh 9988776600","Prelaunch Aliens Group Gachibowli 2&3BHK 75L Dec 2026 possession clubhouse pool"];
+  const extract=async()=>{
+    if(!msg.trim())return;setLoading(true);setSaved(false);setExt(null);
+    const m=msg;setChat(p=>[...p,{from:"dev",text:m,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}]);setMsg("");
+    const raw=await callAI(`Extract property info from this WhatsApp message for Real-X Hyderabad CRM:\n\n"${m}"\n\nReturn ONLY valid JSON (no markdown):\n{"name":"","loc":"","region":"West Hyderabad","type":"Apartment","price":"","priceSqYd":"","size":"","facing":"East","dev":"","contact":"","phone":"","rera":"","status":"Under Construction","landmark":"","amenities":[],"desc":""}\n\nThen on a new line write:\n---REPLY---\nShort confirmation (max 15 words).`);
+    if(raw.startsWith("ERR:")){setChat(p=>[...p,{from:"bot",text:"⚠️ AI error. Please try again.",time:"Now"}]);setLoading(false);return;}
+    const[jp,rp]=raw.split("---REPLY---");let parsed=null;
+    try{parsed=JSON.parse(jp.replace(/```json|```/g,"").trim());}catch{}
+    setExt(parsed);setChat(p=>[...p,{from:"bot",text:`✅ ${rp?.trim()||"Extracted!"}\nClick "Save to Database" to add.`,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),ok:true}]);setLoading(false);
+  };
+  const handleSave=(pd)=>{addProp(pd);setSaved(true);setShowSave(false);setChat(p=>[...p,{from:"bot",text:`🎉 "${pd.name}" saved! Find it in Properties tab.`,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),ok:true}]);};
+  return(
+    <div>
+      <div style={{marginBottom:14}}><div style={{fontSize:20,fontWeight:700,color:C.text,fontFamily:"'Cormorant Garamond',serif"}}>WhatsApp Bot</div><div style={{fontSize:12,color:C.sub,marginTop:3}}>Paste broker/developer message → AI extracts → saves to database → share to clients</div></div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:13}}>
+        <div style={{background:"#07120A",border:"1px solid #1A3A20",borderRadius:12,overflow:"hidden",display:"flex",flexDirection:"column"}}>
+          <div style={{background:"#128C7E",padding:"10px 13px",display:"flex",alignItems:"center",gap:8,flexShrink:0}}><div style={{width:29,height:29,borderRadius:"50%",background:"#25D366",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>🏢</div><div><div style={{color:"#fff",fontSize:12,fontWeight:600}}>Real-X Property Bot</div><div style={{color:"#B2DFC4",fontSize:10}}>AI Auto-Extract · Online</div></div></div>
+          <div style={{padding:"10px 11px",flex:1,overflowY:"auto",display:"flex",flexDirection:"column",gap:7,maxHeight:280}}>{chat.map((m,i)=><div key={i} style={{display:"flex",justifyContent:m.from==="dev"?"flex-start":"flex-end"}}><div style={{maxWidth:"85%",padding:"7px 10px",fontSize:11,lineHeight:1.5,borderRadius:m.from==="dev"?"2px 9px 9px 9px":"9px 2px 9px 9px",background:m.from==="dev"?"#1B2E1F":m.ok?"#0D3A15":"#0A2A0E",color:m.from==="dev"?"#C4DEC8":"#7DCC9A",border:m.ok?"1px solid #25D36628":"none",whiteSpace:"pre-line"}}>{m.text}<div style={{fontSize:9,color:"#3D6040",textAlign:"right",marginTop:2}}>{m.time}</div></div></div>)}{loading&&<div style={{display:"flex",justifyContent:"flex-end"}}><div style={{background:"#0A2A0E",borderRadius:"9px 2px 9px 9px",padding:"7px 10px",fontSize:11,color:"#7DCC9A"}}>🤖 Extracting...</div></div>}</div>
+          <div style={{padding:"5px 10px",borderTop:"1px solid #1A3A20",flexShrink:0}}><div style={{fontSize:9,color:"#3D6040",marginBottom:3}}>Sample messages:</div>{samples.map((s,i)=><button key={i} onClick={()=>setMsg(s)} style={{width:"100%",background:"#182A1C",border:"1px solid #1A3A20",color:"#6AB885",borderRadius:6,padding:"4px 8px",fontSize:10,cursor:"pointer",textAlign:"left",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:3}}>{s.substring(0,55)}…</button>)}</div>
+          <div style={{padding:"6px 10px",display:"flex",gap:6,background:"#0A1A0D",flexShrink:0}}><input value={msg} onChange={e=>setMsg(e.target.value)} placeholder="Paste WhatsApp property message..." onKeyDown={e=>e.key==="Enter"&&extract()} style={{flex:1,background:"#182A1C",border:"1px solid #1A3A20",borderRadius:18,color:"#C4DEC8",fontSize:11,padding:"6px 12px",outline:"none",fontFamily:"inherit"}}/><button onClick={extract} disabled={loading} style={{background:"#25D366",border:"none",color:"#000",borderRadius:"50%",width:30,height:30,fontSize:14,cursor:"pointer",flexShrink:0,fontWeight:700}}>↑</button></div>
+        </div>
+        <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,display:"flex",flexDirection:"column"}}>
+          <div style={{padding:"9px 13px",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:6,flexShrink:0}}><span>🧠</span><div style={{fontSize:12,fontWeight:600,color:C.gold}}>AI Extraction Panel</div>{saved&&<span style={{fontSize:10,color:C.green,fontWeight:600,marginLeft:"auto"}}>✓ Saved!</span>}</div>
+          <div style={{padding:11,flex:1,overflowY:"auto"}}>
+            {!ext&&!loading&&<div style={{textAlign:"center",padding:"32px 14px"}}><div style={{fontSize:28,marginBottom:9}}>📋</div><div style={{fontSize:12,color:C.sub,lineHeight:1.7}}>Paste a property message from any broker or developer. AI extracts all fields and lets you save + share with one click.</div></div>}
+            {ext&&<div>
+              <div style={{fontSize:11,color:C.green,fontWeight:600,marginBottom:10,paddingBottom:9,borderBottom:`1px solid ${C.border}`}}>✓ {Object.values(ext).filter(v=>v&&(Array.isArray(v)?v.length>0:true)).length} fields extracted</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>{Object.entries(ext).filter(([k,v])=>v&&k!=="amenities"&&k!=="desc"&&!Array.isArray(v)).map(([k,v])=><div key={k} style={{background:C.bg,borderRadius:6,padding:"6px 8px"}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:2}}>{k.replace(/([A-Z])/g," $1").trim()}</div><div style={{fontSize:11,color:C.text,fontWeight:500}}>{v}</div></div>)}</div>
+              {ext.amenities?.length>0&&<div style={{marginTop:7}}><div style={{fontSize:9,color:C.sub,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:3}}>Amenities</div><div style={{display:"flex",flexWrap:"wrap",gap:4}}>{ext.amenities.map(a=><Pill key={a} label={a} color={C.teal}/>)}</div></div>}
+              {!saved&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginTop:10}}><button onClick={()=>setShowSave(true)} style={{background:C.gold,border:"none",color:"#050810",borderRadius:7,padding:"9px",fontSize:11,cursor:"pointer",fontWeight:700}}>💾 Save to DB</button><button onClick={()=>{if(ext)openWA(fmtWA({...ext,name:ext.name||"Property",amenities:ext.amenities||[]}));}} style={{background:`${C.wa}15`,border:`1px solid ${C.wa}28`,color:C.wa,borderRadius:7,padding:"9px",fontSize:11,cursor:"pointer",fontWeight:600}}>📤 Share Now</button></div>}
+              {!saved&&<button onClick={()=>setExt(null)} style={{width:"100%",background:"transparent",border:`1px solid ${C.border}`,color:C.sub,borderRadius:7,padding:"7px",fontSize:11,cursor:"pointer",marginTop:6}}>Clear</button>}
+              {saved&&<div style={{marginTop:10,background:`${C.green}10`,border:`1px solid ${C.green}22`,borderRadius:7,padding:"8px",textAlign:"center"}}><div style={{fontSize:12,color:C.green,fontWeight:600}}>🎉 Saved! View in Properties tab.</div></div>}
+            </div>}
+          </div>
+        </div>
+      </div>
+      {showSave&&ext&&<AddPropModal initial={{name:ext.name||"",loc:ext.loc||"",region:ext.region||"West Hyderabad",type:ext.type||"Apartment 2BHK",price:ext.price||"",priceSqYd:ext.priceSqYd||"",size:ext.size||"",facing:ext.facing||"East",dev:ext.dev||"",contact:ext.contact||"",phone:ext.phone||"",rera:ext.rera||"",status:ext.status||"Under Construction",landmark:ext.landmark||"",amenities:(ext.amenities||[]).join(", "),desc:ext.desc||""}} onSave={handleSave} onClose={()=>setShowSave(false)}/>}
+    </div>
+  );
+}
+
+/* ── LEAD DETAIL PANEL ── */
+function LeadPanel({lead,properties,onUpdate,onDelete,onClose}){
+  const [tab,setTab]=useState("overview");
+  const [note,setNote]=useState("");const [editReq,setEditReq]=useState(false);const [nReq,setNReq]=useState(lead.req||"");const [nBudget,setNBudget]=useState(lead.budget||"");
+  const [showPicker,setShowPicker]=useState(false);const [pSrch,setPSrch]=useState("");
+  const [confirmDel,setConfirmDel]=useState(false);const [confirmClose,setConfirmClose]=useState(null);
+  const [shareAfterSend,setShareAfterSend]=useState(null);
+  const isClosed=["Closed - Won","Lost - Competitor","Not Interested"].includes(lead.status);
+  const addAct=(type,text,extra={})=>onUpdate({...lead,last:"Just now",activities:[{id:Date.now(),type,text,time:tsNow(),...extra},...(lead.activities||[])]});
+  const saveNote=()=>{if(!note.trim())return;addAct("note",note.trim());setNote("");};
+  const saveReq=()=>{if(!nReq.trim())return;const hist=[{req:nReq,budget:nBudget,date:new Date().toLocaleDateString("en-IN")},...(lead.reqHistory||[])];onUpdate({...lead,req:nReq,budget:nBudget,reqHistory:hist,last:"Just now",activities:[{id:Date.now(),type:"req_change",text:`Requirement updated to: "${nReq}" (${nBudget})`,time:tsNow()},...(lead.activities||[])]});setEditReq(false);};
+  const sendProp=(p)=>{const ps={propId:p.id,propName:p.name,sentAt:tsNow()};onUpdate({...lead,props:(lead.props||0)+1,propsSent:[ps,...(lead.propsSent||[])],last:"Just now",activities:[{id:Date.now(),type:"property_sent",text:`Sent "${p.name}" to ${lead.name}`,propName:p.name,time:tsNow()},...(lead.activities||[])]});setShareAfterSend(p);setShowPicker(false);};
+  const setStatus=(s)=>{onUpdate({...lead,status:s,last:"Just now",activities:[{id:Date.now(),type:"status_change",text:`Status changed to ${s}`,time:tsNow()},...(lead.activities||[])]});setConfirmClose(null);};
+  const fp=properties.filter(p=>{const q=pSrch.toLowerCase();return!q||[p.name,p.loc,p.type,p.dev].some(v=>(v||"").toLowerCase().includes(q));});
+  const aIcons={contact:"📱",note:"📝",call:"📞",whatsapp:"💬",property_sent:"🏠",req_change:"✏️",status_change:"🔄",closed_won:"✅",lost:"❌"};
+  const aColors={contact:C.blue,note:C.teal,call:C.green,whatsapp:C.wa,property_sent:C.gold,req_change:C.purple,status_change:C.amber,closed_won:C.green,lost:C.red};
+  const statusIcon=lead.status==="Hot"?"🔥":lead.status==="Warm"?"⚡":lead.status==="Cold"?"❄️":lead.status==="Closed - Won"?"✅":lead.status==="Lost - Competitor"?"❌":"😐";
+  return(
+    <div style={{background:C.surface,border:`1px solid ${LSTAT_COL[lead.status]||C.gold}35`,borderRadius:14,overflow:"hidden",marginTop:12}}>
+      {/* Header */}
+      <div style={{padding:"13px 17px",background:`${LSTAT_COL[lead.status]||C.gold}08`,borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{display:"flex",alignItems:"center",gap:11}}>
+          <div style={{width:38,height:38,borderRadius:"50%",background:`${LSTAT_COL[lead.status]||C.gold}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16}}>{statusIcon}</div>
+          <div><div style={{fontSize:14,fontWeight:700,color:C.text}}>{lead.name}</div><div style={{fontSize:11,color:C.sub}}>📞 {lead.phone} · via {lead.src}</div></div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}><StBadge status={lead.status}/><button onClick={onClose} style={{background:"transparent",border:"none",color:C.sub,cursor:"pointer",fontSize:18,marginLeft:4}}>✕</button></div>
+      </div>
+      {/* Tabs */}
+      <div style={{display:"flex",borderBottom:`1px solid ${C.border}`}}>
+        {[["overview","📋 Overview"],["properties","🏠 Sent ("+((lead.propsSent||[]).length)+")"],["timeline","⚡ Timeline ("+((lead.activities||[]).length)+")"],["actions","⚙️ Actions"]].map(([id,label])=>(
+          <button key={id} onClick={()=>setTab(id)} style={{flex:1,padding:"9px 6px",background:tab===id?`${C.gold}10`:"transparent",border:"none",borderBottom:tab===id?`2px solid ${C.gold}`:"2px solid transparent",color:tab===id?C.gold:C.sub,fontSize:11,cursor:"pointer",fontWeight:tab===id?600:400}}>{label}</button>
+        ))}
+      </div>
+      <div style={{padding:"15px 17px"}}>
+        {/* OVERVIEW */}
+        {tab==="overview"&&<div>
+          <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:9,padding:"12px 13px",marginBottom:11}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:7}}>
+              <div style={{fontSize:11,fontWeight:600,color:C.gold,textTransform:"uppercase",letterSpacing:"0.5px"}}>Current Requirement</div>
+              {!isClosed&&<button onClick={()=>{setEditReq(!editReq);setNReq(lead.req||"");setNBudget(lead.budget||"");}} style={{background:"transparent",border:`1px solid ${C.border}`,color:C.sub,borderRadius:6,padding:"2px 8px",fontSize:10,cursor:"pointer"}}>✏️ Edit</button>}
+            </div>
+            {editReq?<div>
+              <div style={{marginBottom:7}}><div style={LBL}>Requirement</div><textarea style={{...INP,height:50,resize:"none"}} value={nReq} onChange={e=>setNReq(e.target.value)}/></div>
+              <div style={{marginBottom:9}}><div style={LBL}>Budget</div><input style={INP} value={nBudget} onChange={e=>setNBudget(e.target.value)}/></div>
+              <div style={{display:"flex",gap:7}}><button onClick={saveReq} style={{flex:1,background:C.gold,border:"none",color:"#050810",borderRadius:7,padding:"8px",fontSize:12,fontWeight:700,cursor:"pointer"}}>Save</button><button onClick={()=>setEditReq(false)} style={{background:"transparent",border:`1px solid ${C.border}`,color:C.sub,borderRadius:7,padding:"8px 13px",fontSize:11,cursor:"pointer"}}>Cancel</button></div>
+            </div>:<div>
+              <div style={{fontSize:13,color:C.text,fontWeight:500,marginBottom:4}}>{lead.req||"No requirement set"}</div>
+              <div style={{fontSize:12,color:C.gold}}>💰 {lead.budget||"Budget not specified"}</div>
+              {lead.notes&&<div style={{fontSize:11,color:C.sub,marginTop:5}}>📝 {lead.notes}</div>}
+            </div>}
+          </div>
+          {(lead.reqHistory||[]).length>0&&<div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:9,padding:"11px 13px"}}>
+            <div style={{fontSize:11,fontWeight:600,color:C.sub,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:8}}>Requirement History</div>
+            {(lead.reqHistory||[]).map((h,i)=><div key={i} style={{display:"flex",gap:9,marginBottom:7,paddingBottom:7,borderBottom:i<(lead.reqHistory||[]).length-1?`1px solid ${C.border}`:"none"}}>
+              <div style={{width:6,height:6,borderRadius:"50%",background:i===0?C.gold:C.dim,marginTop:5,flexShrink:0}}/>
+              <div style={{flex:1}}><div style={{fontSize:12,color:i===0?C.text:C.sub}}>{h.req}</div><div style={{fontSize:11,color:C.sub}}>{h.budget} · {h.date}</div></div>
+              {i===0&&<Pill label="Current" color={C.gold}/>}
+            </div>)}
+          </div>}
+        </div>}
+        {/* PROPERTIES SENT */}
+        {tab==="properties"&&<div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:11}}>
+            <div style={{fontSize:12,color:C.sub}}>{(lead.propsSent||[]).length} properties sent</div>
+            {!isClosed&&<button onClick={()=>setShowPicker(true)} style={{background:`${C.gold}12`,border:`1px solid ${C.gold}28`,color:C.gold,borderRadius:7,padding:"5px 12px",fontSize:11,cursor:"pointer",fontWeight:600}}>🏠 Send Property</button>}
+          </div>
+          {(lead.propsSent||[]).length===0?<div style={{textAlign:"center",padding:"28px 20px",background:C.card,border:`1px solid ${C.border}`,borderRadius:9}}>
+            <div style={{fontSize:22,marginBottom:7}}>🏘️</div><div style={{fontSize:12,color:C.sub,marginBottom:9}}>No properties sent yet</div>
+            {!isClosed&&<button onClick={()=>setShowPicker(true)} style={{background:C.gold,border:"none",color:"#050810",borderRadius:7,padding:"7px 16px",fontSize:12,fontWeight:700,cursor:"pointer"}}>Send First Property</button>}
+          </div>:(lead.propsSent||[]).map((ps,i)=>{const prop=properties.find(p=>p.id===ps.propId);return(
+            <div key={i} style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:"10px 12px",marginBottom:7,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div><div style={{fontSize:12,fontWeight:600,color:C.text}}>{ps.propName}</div><div style={{fontSize:10,color:C.sub}}>Sent {fmtT(ps.sentAt)}</div>{prop&&<div style={{fontSize:11,color:C.gold,marginTop:2}}>{prop.price} · {prop.loc}</div>}</div>
+              {prop&&<button onClick={()=>openWA(fmtWA(prop),lead.phone)} style={{background:`${C.wa}15`,border:`1px solid ${C.wa}28`,color:C.wa,borderRadius:7,padding:"5px 9px",fontSize:10,cursor:"pointer",fontWeight:600}}>📤 Resend</button>}
+            </div>
+          );})}
+          {showPicker&&<div style={{marginTop:11,background:C.bg,border:`1px solid ${C.border}`,borderRadius:9,padding:"12px 13px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:9}}><div style={{fontSize:12,fontWeight:600,color:C.text}}>Select Property to Send</div><button onClick={()=>setShowPicker(false)} style={{background:"transparent",border:"none",color:C.sub,cursor:"pointer",fontSize:15}}>✕</button></div>
+            <input value={pSrch} onChange={e=>setPSrch(e.target.value)} placeholder="Search properties..." style={{...INP,marginBottom:9}}/>
+            <div style={{maxHeight:190,overflowY:"auto",display:"flex",flexDirection:"column",gap:6}}>{fp.map(p=><div key={p.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:7,padding:"9px 11px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div><div style={{fontSize:12,fontWeight:600,color:C.text}}>{p.name}</div><div style={{fontSize:11,color:C.sub}}>📍 {p.loc} · {p.price}</div></div>
+              <button onClick={()=>sendProp(p)} style={{background:C.gold,border:"none",color:"#050810",borderRadius:7,padding:"5px 11px",fontSize:11,fontWeight:700,cursor:"pointer"}}>Send 📤</button>
+            </div>)}{fp.length===0&&<div style={{fontSize:12,color:C.sub,textAlign:"center",padding:"18px"}}>No properties found</div>}</div>
+          </div>}
+        </div>}
+        {/* TIMELINE */}
+        {tab==="timeline"&&<div>
+          {!isClosed&&<div style={{marginBottom:13}}>
+            <div style={{display:"flex",gap:7,marginBottom:8}}>
+              <input value={note} onChange={e=>setNote(e.target.value)} onKeyDown={e=>e.key==="Enter"&&saveNote()} placeholder="Add a note... (e.g. customer called, budget flexible, wants site visit)" style={{...INP,flex:1}}/>
+              <button onClick={saveNote} disabled={!note.trim()} style={{background:note.trim()?C.teal:`${C.teal}28`,border:"none",color:note.trim()?"#050810":C.dim,borderRadius:7,padding:"9px 13px",fontSize:12,fontWeight:700,cursor:note.trim()?"pointer":"default"}}>+ Note</button>
+            </div>
+            <div style={{display:"flex",gap:6}}>{[["📞 Called",{type:"call",text:`Called ${lead.name}`}],["💬 WhatsApp",{type:"whatsapp",text:`WhatsApp message sent to ${lead.name}`}]].map(([label,act])=><button key={label} onClick={()=>addAct(act.type,act.text)} style={{background:`${C.blue}10`,border:`1px solid ${C.blue}20`,color:C.blue,borderRadius:7,padding:"5px 11px",fontSize:11,cursor:"pointer"}}>{label}</button>)}</div>
+          </div>}
+          {(lead.activities||[]).length===0?<div style={{textAlign:"center",padding:"28px",color:C.sub,fontSize:12}}>No activity yet.</div>:(lead.activities||[]).map((act,i)=>(
+            <div key={act.id||i} style={{display:"flex",gap:9,marginBottom:11,paddingBottom:11,borderBottom:i<(lead.activities||[]).length-1?`1px solid ${C.border}`:"none"}}>
+              <div style={{width:28,height:28,borderRadius:"50%",background:`${aColors[act.type]||C.sub}18`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,flexShrink:0}}>{aIcons[act.type]||"•"}</div>
+              <div style={{flex:1}}><div style={{fontSize:12,color:C.text,lineHeight:1.4}}>{act.text}</div>{act.propName&&<div style={{fontSize:11,color:C.gold,marginTop:2}}>🏢 {act.propName}</div>}<div style={{fontSize:10,color:C.sub,marginTop:3}}>{fmtT(act.time)}</div></div>
+            </div>
+          ))}
+        </div>}
+        {/* ACTIONS */}
+        {tab==="actions"&&<div>
+          {!isClosed&&<div>
+            <div style={{fontSize:11,color:C.sub,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:9}}>Change Status</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:7,marginBottom:16}}>
+              {["Hot","Warm","Cold"].map(s=><button key={s} onClick={()=>setStatus(s)} style={{background:lead.status===s?`${LSTAT_COL[s]}18`:`${LSTAT_COL[s]}08`,border:`1px solid ${LSTAT_COL[s]}${lead.status===s?"40":"20"}`,color:LSTAT_COL[s],borderRadius:8,padding:"9px",fontSize:12,cursor:"pointer",fontWeight:lead.status===s?700:400}}>{s==="Hot"?"🔥":s==="Warm"?"⚡":"❄️"} {s}</button>)}
+            </div>
+            <div style={{fontSize:11,color:C.sub,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:9}}>Close Lead</div>
+            <div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:16}}>
+              {confirmClose==="won"?<div style={{background:`${C.green}10`,border:`1px solid ${C.green}25`,borderRadius:9,padding:"11px 13px"}}><div style={{fontSize:12,color:C.green,marginBottom:8}}>✅ Confirm — Found property with Real-X?</div><div style={{display:"flex",gap:7}}><button onClick={()=>setStatus("Closed - Won")} style={{flex:1,background:C.green,border:"none",color:"#050810",borderRadius:7,padding:"8px",fontSize:12,fontWeight:700,cursor:"pointer"}}>Yes, Close Won</button><button onClick={()=>setConfirmClose(null)} style={{background:"transparent",border:`1px solid ${C.border}`,color:C.sub,borderRadius:7,padding:"8px 12px",fontSize:11,cursor:"pointer"}}>Cancel</button></div></div>:<button onClick={()=>setConfirmClose("won")} style={{background:`${C.green}08`,border:`1px solid ${C.green}22`,color:C.green,borderRadius:8,padding:"10px 14px",fontSize:12,cursor:"pointer",fontWeight:600,textAlign:"left"}}>✅ Closed — Found Property with Us</button>}
+              {confirmClose==="comp"?<div style={{background:`${C.red}10`,border:`1px solid ${C.red}25`,borderRadius:9,padding:"11px 13px"}}><div style={{fontSize:12,color:C.red,marginBottom:8}}>❌ Confirm — Lost to another agent?</div><div style={{display:"flex",gap:7}}><button onClick={()=>setStatus("Lost - Competitor")} style={{flex:1,background:C.red,border:"none",color:"#fff",borderRadius:7,padding:"8px",fontSize:12,fontWeight:700,cursor:"pointer"}}>Yes, Mark Lost</button><button onClick={()=>setConfirmClose(null)} style={{background:"transparent",border:`1px solid ${C.border}`,color:C.sub,borderRadius:7,padding:"8px 12px",fontSize:11,cursor:"pointer"}}>Cancel</button></div></div>:<button onClick={()=>setConfirmClose("comp")} style={{background:`${C.red}08`,border:`1px solid ${C.red}20`,color:C.red,borderRadius:8,padding:"10px 14px",fontSize:12,cursor:"pointer",fontWeight:600,textAlign:"left"}}>❌ Lost — Found Property with Another Agent</button>}
+              {confirmClose==="ni"?<div style={{background:`${C.dim}20`,border:`1px solid ${C.dim}`,borderRadius:9,padding:"11px 13px"}}><div style={{fontSize:12,color:C.sub,marginBottom:8}}>🚫 Confirm — Mark as not interested?</div><div style={{display:"flex",gap:7}}><button onClick={()=>setStatus("Not Interested")} style={{flex:1,background:C.sub,border:"none",color:"#050810",borderRadius:7,padding:"8px",fontSize:12,fontWeight:700,cursor:"pointer"}}>Yes, Mark</button><button onClick={()=>setConfirmClose(null)} style={{background:"transparent",border:`1px solid ${C.border}`,color:C.sub,borderRadius:7,padding:"8px 12px",fontSize:11,cursor:"pointer"}}>Cancel</button></div></div>:<button onClick={()=>setConfirmClose("ni")} style={{background:`${C.dim}18`,border:`1px solid ${C.dim}`,color:C.sub,borderRadius:8,padding:"10px 14px",fontSize:12,cursor:"pointer",fontWeight:600,textAlign:"left"}}>🚫 Not Interested</button>}
+            </div>
+          </div>}
+          {isClosed&&<div style={{background:`${LSTAT_COL[lead.status]||C.green}08`,border:`1px solid ${LSTAT_COL[lead.status]||C.green}22`,borderRadius:9,padding:"13px",marginBottom:14,textAlign:"center"}}><div style={{fontSize:14,color:LSTAT_COL[lead.status]||C.green,fontWeight:600,marginBottom:4}}>{lead.status}</div><div style={{fontSize:11,color:C.sub,marginBottom:9}}>This lead is closed.</div><button onClick={()=>setStatus("Warm")} style={{background:`${C.amber}12`,border:`1px solid ${C.amber}28`,color:C.amber,borderRadius:7,padding:"7px 14px",fontSize:11,cursor:"pointer"}}>↩ Reopen as Warm</button></div>}
+          <div style={{borderTop:`1px solid ${C.border}`,paddingTop:13}}>
+            <div style={{fontSize:11,color:C.sub,textTransform:"uppercase",letterSpacing:"0.5px",marginBottom:8}}>Danger Zone</div>
+            {!confirmDel?<button onClick={()=>setConfirmDel(true)} style={{background:`${C.red}08`,border:`1px solid ${C.red}20`,color:C.red,borderRadius:8,padding:"8px 14px",fontSize:12,cursor:"pointer"}}>🗑️ Delete This Lead</button>:<div style={{background:`${C.red}10`,border:`1px solid ${C.red}28`,borderRadius:9,padding:"11px 13px"}}><div style={{fontSize:12,color:C.red,marginBottom:8}}>⚠️ Delete {lead.name}? This cannot be undone.</div><div style={{display:"flex",gap:7}}><button onClick={()=>onDelete(lead.id)} style={{flex:1,background:C.red,border:"none",color:"#fff",borderRadius:7,padding:"8px",fontSize:12,fontWeight:700,cursor:"pointer"}}>Delete Permanently</button><button onClick={()=>setConfirmDel(false)} style={{background:"transparent",border:`1px solid ${C.border}`,color:C.sub,borderRadius:7,padding:"8px 12px",fontSize:11,cursor:"pointer"}}>Cancel</button></div></div>}
+          </div>
+        </div>}
+      </div>
+      {shareAfterSend&&<ShareModal property={shareAfterSend} leads={[{id:lead.id,name:lead.name,phone:lead.phone,status:lead.status}]} onClose={()=>setShareAfterSend(null)}/>}
+    </div>
+  );
+}
+
+/* LEADS */
+function Leads({leads,properties,onUpdate,onDelete,addLead}){
+  const [sel,setSel]=useState(null);const [showAdd,setShowAdd]=useState(false);const [filt,setFilt]=useState("All");const [srch,setSrch]=useState("");
+  const ct=s=>leads.filter(l=>l.status===s).length;
+  const filtered=leads.filter(l=>{const mf=filt==="All"||l.status===filt;const ms=!srch||(l.name+l.phone+(l.req||"")+(l.notes||"")).toLowerCase().includes(srch.toLowerCase());return mf&&ms;});
+  const handleUpd=(u)=>{onUpdate(u);setSel(u);};
+  return(
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <div><div style={{fontSize:20,fontWeight:700,color:C.text,fontFamily:"'Cormorant Garamond',serif"}}>Leads & CRM</div><div style={{fontSize:12,color:C.sub,marginTop:2}}>{leads.length} total · {ct("Hot")} hot · {ct("Closed - Won")} closed won</div></div>
+        <button onClick={()=>setShowAdd(true)} style={{background:`${C.green}12`,border:`1px solid ${C.green}28`,color:C.green,borderRadius:8,padding:"8px 14px",fontSize:12,cursor:"pointer",fontWeight:600}}>+ Add Lead</button>
+      </div>
+      {/* Status cards */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:13}}>
+        {[["🔥 Hot",C.red,"Hot"],["⚡ Warm",C.amber,"Warm"],["❄️ Cold",C.blue,"Cold"],["✅ Won",C.green,"Closed - Won"],["❌ Lost",C.sub,"Lost - Competitor"]].map(([l,col,f])=>(
+          <div key={l} onClick={()=>setFilt(filt===f?"All":f)} style={{background:filt===f?`${col}14`:C.card,border:`1px solid ${filt===f?col:C.border}`,borderRadius:9,padding:"9px 11px",cursor:"pointer",transition:"all 0.15s"}}>
+            <div style={{fontSize:9,color:C.sub,marginBottom:3}}>{l}</div>
+            <div style={{fontSize:21,fontWeight:700,color:col}}>{ct(f)}</div>
+          </div>
+        ))}
+      </div>
+      {/* Search */}
+      <div style={{position:"relative",marginBottom:10}}><span style={{position:"absolute",left:11,top:"50%",transform:"translateY(-50%)",fontSize:13,color:C.sub,pointerEvents:"none"}}>🔍</span><input value={srch} onChange={e=>setSrch(e.target.value)} placeholder="Search leads by name, phone, requirement..." style={{...INP,paddingLeft:32}}/>{srch&&<button onClick={()=>setSrch("")} style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",background:"transparent",border:"none",color:C.sub,cursor:"pointer",fontSize:14}}>✕</button>}</div>
+      {/* Table */}
+      <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:12,overflow:"hidden"}}>
+        <div style={{display:"grid",gridTemplateColumns:"2fr 1.3fr 2fr 1fr 1fr 0.7fr",padding:"9px 15px",borderBottom:`1px solid ${C.border}`}}>
+          {["Lead","Phone","Requirement","Budget","Status","Sent"].map(h=><div key={h} style={{fontSize:10,color:C.sub,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.5px"}}>{h}</div>)}
+        </div>
+        {filtered.length===0&&<div style={{padding:"26px",textAlign:"center",fontSize:12,color:C.sub}}>{leads.length===0?"No leads yet — add your first one!":"No leads match."}</div>}
+        {filtered.map((lead,i)=>{
+          const closed=["Closed - Won","Lost - Competitor","Not Interested"].includes(lead.status);
+          return(
+            <div key={lead.id} onClick={()=>setSel(sel?.id===lead.id?null:lead)} style={{display:"grid",gridTemplateColumns:"2fr 1.3fr 2fr 1fr 1fr 0.7fr",padding:"10px 15px",cursor:"pointer",borderBottom:i<filtered.length-1?`1px solid ${C.border}`:"none",background:sel?.id===lead.id?`${C.gold}06`:closed?`${C.dim}06`:"transparent",opacity:closed?0.65:1,transition:"background 0.1s"}}>
+              <div><div style={{fontSize:12,color:C.text,fontWeight:500}}>{lead.name}</div><div style={{fontSize:10,color:C.sub}}>via {lead.src} · {lead.last}</div></div>
+              <div style={{fontSize:11,color:C.sub,display:"flex",alignItems:"center"}}>{lead.phone}</div>
+              <div style={{fontSize:11,color:C.text,display:"flex",alignItems:"center",paddingRight:7}}>{lead.req||"—"}</div>
+              <div style={{fontSize:11,color:C.gold,display:"flex",alignItems:"center",fontWeight:600}}>{lead.budget||"—"}</div>
+              <div style={{display:"flex",alignItems:"center"}}><StBadge status={lead.status}/></div>
+              <div style={{fontSize:11,color:C.blue,display:"flex",alignItems:"center",fontWeight:600}}>{(lead.propsSent||[]).length} 🏠</div>
+            </div>
+          );
+        })}
+      </div>
+      {sel&&<LeadPanel lead={sel} properties={properties} onUpdate={handleUpd} onDelete={(id)=>{onDelete(id);setSel(null);}} onClose={()=>setSel(null)}/>}
+      {showAdd&&<AddLeadModal onSave={addLead} onClose={()=>setShowAdd(false)}/>}
+    </div>
+  );
+}
+
+/* ROOT */
+export default function RealXCRM(){
+  const [tab,setTab]=useState("dashboard");
+  const [properties,setProperties]=useState([]);
+  const [leads,setLeads]=useState([]);
+  const [ready,setReady]=useState(false);
+  useEffect(()=>{(async()=>{const p=await loadS("rx_props",[]);const l=await loadS("rx_leads",[]);const fp=p.length?p:SP;const fl=l.length?l:SL;setProperties(fp);setLeads(fl);if(!p.length)await saveS("rx_props",SP);if(!l.length)await saveS("rx_leads",SL);setReady(true);})();},[]);
+  const addProp=async(p)=>{const n={...p,id:Date.now(),added:"Just now",hot:false};const u=[n,...properties];setProperties(u);await saveS("rx_props",u);};
+  const addLead=async(l)=>{const n={...l,id:Date.now(),last:"Just now",props:0,activities:[{id:Date.now(),type:"contact",text:`New lead added. Req: ${l.req||"Not set"}`,time:tsNow()}],propsSent:[],reqHistory:[{req:l.req||"",budget:l.budget||"",date:new Date().toLocaleDateString("en-IN")}]};const u=[n,...leads];setLeads(u);await saveS("rx_leads",u);};
+  const updateLead=async(upd)=>{const u=leads.map(l=>l.id===upd.id?upd:l);setLeads(u);await saveS("rx_leads",u);};
+  const deleteLead=async(id)=>{const u=leads.filter(l=>l.id!==id);setLeads(u);await saveS("rx_leads",u);};
+  if(!ready)return(<div style={{display:"flex",height:"100vh",alignItems:"center",justifyContent:"center",background:"#06080D"}}><div style={{textAlign:"center"}}><div style={{fontSize:22,color:"#C9A44A",fontWeight:700,marginBottom:7,fontFamily:"serif"}}>Real-X Hyderabad</div><div style={{fontSize:12,color:"#7A7570"}}>Loading...</div></div></div>);
+  return(
+    <div style={{display:"flex",height:"100vh",background:"#06080D",color:"#EDE8DB",overflow:"hidden"}}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@400;600;700&display=swap');*{box-sizing:border-box;margin:0;padding:0;}::-webkit-scrollbar{width:3px;height:3px;}::-webkit-scrollbar-thumb{background:rgba(201,164,74,0.22);border-radius:2px;}::-webkit-scrollbar-track{background:transparent;}button,input,textarea,select{font-family:'Outfit',sans-serif;}select option{background:#0C0F18;color:#EDE8DB;}`}</style>
+      <Sidebar tab={tab} setTab={setTab} pc={properties.length} lc={leads.length}/>
+      <main style={{flex:1,overflowY:"auto",padding:"20px 22px",fontFamily:"'Outfit',sans-serif"}}>
+        {tab==="dashboard"&&<Dashboard properties={properties} leads={leads}/>}
+        {tab==="properties"&&<Properties properties={properties} leads={leads} addProp={addProp}/>}
+        {tab==="search"&&<AISearch properties={properties} leads={leads}/>}
+        {tab==="whatsapp"&&<WhatsAppBot addProp={addProp}/>}
+        {tab==="leads"&&<Leads leads={leads} properties={properties} onUpdate={updateLead} onDelete={deleteLead} addLead={addLead}/>}
+      </main>
+    </div>
+  );
+}
+
+  </script>
+</body>
+</html>
